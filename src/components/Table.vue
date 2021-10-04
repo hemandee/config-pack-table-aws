@@ -1,9 +1,12 @@
 <template>
   <div style="display: flex; flex-direction: column; height: 100%">
-    <v-dialog :value="missingRulesDialog" width="500">
+    <v-dialog :value="missingRulesDialog" width="500" fullscreen>
       <v-card>
         <v-card-title class="text-h5 grey lighten-2">
           New Rules not in Config Packs
+          <v-btn color="primary" text @click="missingRulesDialog = false">
+            Close
+          </v-btn>
         </v-card-title>
 
         <v-card-text>
@@ -19,9 +22,6 @@
 
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="primary" text @click="missingRulesDialog = false">
-            Close
-          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>

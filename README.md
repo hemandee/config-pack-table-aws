@@ -1,6 +1,6 @@
 # config-packs
 
-Generates a table for comparing AWS Config Conformance Packs.
+A table for comparing AWS Config Conformance Packs.
 
 See it in action here -> https://hemandee.github.io/config-pack-table-aws/
 

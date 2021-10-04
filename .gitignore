@@ -5,6 +5,7 @@ node_modules
 pack.zip
 src/assets/*
 public/*
+publish.sh
 # local env files
 .env.local
 .env.*.local
