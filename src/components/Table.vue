@@ -3,7 +3,7 @@
     <v-dialog :value="missingRulesDialog" width="500" fullscreen>
       <v-card>
         <v-card-title class="text-h5 grey lighten-2">
-          New Rules not in Config Packs
+          Extra Rules not in Config Packs
           <v-btn color="primary" text @click="missingRulesDialog = false">
             Close
           </v-btn>
@@ -36,7 +36,7 @@
 
         <template>
           <v-btn @click="missingRulesDialog = true">
-            New Rules
+            Extra Rules
           </v-btn>
         </template>
       </v-col>
