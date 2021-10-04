@@ -76,6 +76,7 @@ export default {
     gridApi: null,
     defaultColDef: {
       tooltipComponent: "customTooltip",
+      resizeable: true,
     },
     missingRules: ["Empty"],
     missingRulesDialog: false,
@@ -119,13 +120,25 @@ export default {
         });
       }
       const isName = (element) => element.field == "NAME";
+      const isToalCount = (element) => element.field == "TOTAL_RULES";
       columns.splice(columns.findIndex(isName), 1);
+      columns.splice(columns.findIndex(isToalCount), 1);
+
       columns.push({
         field: "NAME",
         pinned: "left",
         rowDrag: true,
         lockPinned: false,
         filterFramework: "ruleSetFilter",
+        width: 300,
+      });
+      columns.push({
+        field: "TOTAL_RULES",
+        pinned: "left",
+        rowDrag: false,
+        lockPinned: false,
+        width: 130,
+        sortable: true,
       });
       this.headers = columns;
     },
@@ -136,7 +149,6 @@ export default {
       console.log(message);
     },
     downloadCSV() {
-      console.log("download");
       this.gridApi.exportDataAsCsv();
     },
   },
@@ -145,7 +157,7 @@ export default {
     // eslint-disable-next-line vue/no-unused-components
     ruleSetFilter: {
       template: `
-      <div style="padding: 4px; width: 200px;">
+      <div style="padding: 4px; width: 220px;">
       <div style="font-weight: bold;">Rule Set</div>
 
       <div>
