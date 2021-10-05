@@ -1,5 +1,43 @@
 <template>
   <div style="display: flex; flex-direction: column; height: 100%">
+    <v-expansion-panels>
+      <v-expansion-panel>
+        <v-expansion-panel-header>
+          <h4>
+            How to Use
+          </h4>
+        </v-expansion-panel-header>
+        <v-expansion-panel-content>
+          <div>
+            Features:
+            <ul>
+              <li>Drag by Name Columns</li>
+              <li>Filter by list of Name (Disables Drag)</li>
+              <li>Sort by TOTAL_RULES</li>
+              <li>Filter each Rule contains by 'X'</li>
+              <li>Extra Rule that are not in Conformance packs</li>
+              <li>
+                Export filtered table to csv for use in Excel or other
+                applications
+              </li>
+            </ul>
+          </div>
+        </v-expansion-panel-content>
+      </v-expansion-panel>
+    </v-expansion-panels>
+    <v-toolbar dense>
+      <v-btn @click="downloadCSV">
+        <v-icon large>
+          mdi-export
+        </v-icon>
+        Export to CSV
+      </v-btn>
+      <v-spacer />
+      <v-btn @click="missingRulesDialog = true">
+        Extra Rules
+      </v-btn></v-toolbar
+    >
+
     <v-dialog :value="missingRulesDialog" width="500" fullscreen>
       <v-card>
         <v-card-title class="text-h5 grey lighten-2">
@@ -27,18 +65,7 @@
     </v-dialog>
     <v-row>
       ><v-col>
-        <v-btn @click="downloadCSV">
-          <v-icon large>
-            mdi-export
-          </v-icon>
-          Export to CSV
-        </v-btn>
-
-        <template>
-          <v-btn @click="missingRulesDialog = true">
-            Extra Rules
-          </v-btn>
-        </template>
+        <template> </template>
       </v-col>
     </v-row>
     <ag-grid-vue
@@ -61,12 +88,13 @@
 <script>
 import "ag-grid-community/dist/styles/ag-grid.css";
 import "ag-grid-community/dist/styles/ag-theme-alpine.css";
-import { VDataTable, VSwitch } from "vuetify/lib/components";
-
 import { AgGridVue } from "ag-grid-vue";
 import data_rules from "../assets/data.json";
 import data_headers from "../assets/data_headers.json";
 import version from "../assets/VERSION.json";
+import customTooltip from "./customTooltip";
+import ruleSetFilter from "./ruleSetFilter";
+
 export default {
   name: "App",
   data: () => ({
@@ -112,7 +140,6 @@ export default {
       let columns = [];
       for (let item in headers) {
         columns.push({
-          //   prop: headers[item],
           field: headers[item],
           sortable: false,
           filter: true,
@@ -155,114 +182,10 @@ export default {
   components: {
     "ag-grid-vue": AgGridVue,
     // eslint-disable-next-line vue/no-unused-components
-    ruleSetFilter: {
-      template: `
-      <div style="padding: 4px; width: 220px;">
-      <div style="font-weight: bold;">Rule Set</div>
+    ruleSetFilter: ruleSetFilter,
 
-      <div>
-      <v-data-table
-      v-model="selected"
-      :items="data.fullList"
-      :single-select="singleSelect"
-      show-select
-      class="elevation-1"
-      item-key=name
-      :headers="headers"
-      :hide-default-header=hideHeaders
-      :items-per-page=itemspage
-      :hide-default-footer=hidefooter
-    >
-      </template>
-    </v-data-table>
-      </div>
-      </div>
-    `,
-
-      components: { VDataTable, VSwitch },
-      data: () => ({
-        fullList: [
-          {
-            name: "CIS-AWS-FB-v1.3-Level1",
-          },
-          {
-            name: "AWS-Well-Architected-Security-Pillar",
-          },
-        ],
-        singleSelect: false,
-        selected: [],
-        hideHeaders: false,
-        itemspage: -1,
-        hidefooter: true,
-        headers: [
-          {
-            text: "Name",
-            value: "name",
-          },
-        ],
-      }),
-      beforeMount() {
-        this.data = {};
-        let paramsList = this.params.api
-          .getModel()
-          .rowsToDisplay.map((element) => element.data.NAME);
-        this.data.fullList = paramsList.map((elem) => ({ name: elem }));
-        this.selected = this.data.fullList;
-      },
-
-      watch: {
-        selected: function() {
-          this.updateFilter();
-        },
-      },
-      methods: {
-        updateFilter() {
-          this.params.filterChangedCallback();
-        },
-
-        doesFilterPass(params) {
-          let flatten = this.selected.map((elem) => elem.name);
-
-          return flatten.includes(params.data.NAME);
-        },
-
-        isFilterActive() {
-          console.log("filteractive");
-          return (
-            this.selected != null &&
-            this.selected !== "" &&
-            this.selected != this.fullList
-          );
-        },
-
-        getModel() {
-          console.log("getmodel");
-
-          return { value: this.selected };
-        },
-
-        setModel(model) {
-          console.log("setmodel");
-
-          this.selected = model.value;
-        },
-      },
-    },
     // eslint-disable-next-line vue/no-unused-components
-    customTooltip: {
-      template: `
-      <div class="tooltip">
-          <p>{{ data }}</p>
-      </div>
-    `,
-      data: function() {
-        return null;
-      },
-      beforeMount() {
-        this.data = this.params.column.getColId() || "Empty";
-        console.log(this.data);
-      },
-    },
+    customTooltip: customTooltip,
   },
 };
 </script>

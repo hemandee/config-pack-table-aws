@@ -1,7 +1,10 @@
 <template>
   <v-app>
     <v-app-bar app color="primary" dark>
-      Config Pack Table
+      <v-app-bar-title>
+        Table of Managed Config Conformance Packs and included rules with Export
+        to CSV and Filter Options</v-app-bar-title
+      >
     </v-app-bar>
 
     <v-main>
