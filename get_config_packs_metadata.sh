@@ -7,5 +7,6 @@ unzip -o pack.zip "aws-config-rules-master/aws-config-conformance-packs/*.yaml" 
 cd pack/aws-config-rules-master/aws-config-conformance-packs
 curl -L https://raw.githubusercontent.com/awsdocs/aws-config-developer-guide/main/doc_source/managed-rules-by-aws-config.md --output managed_rules.md
 python3 ../../../parse_packs.py
+python3 ../../../generateJS.py
 # Get Timestamp for updates
 echo "{\"date\":\"$(date +"%B %d %Y")\"}" > ../../../src/assets/VERSION.json

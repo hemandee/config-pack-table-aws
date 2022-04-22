@@ -20,6 +20,7 @@
                 Export filtered table to csv for use in Excel or other
                 applications
               </li>
+              <li>Select Rows to generate template</li>
             </ul>
           </div>
         </v-expansion-panel-content>
@@ -33,10 +34,24 @@
         Export to CSV
       </v-btn>
       <v-spacer />
+      <!-- <v-btn @click="toCF">
+        <v-icon large>
+          mdi-export
+        </v-icon>
+        Export to CF
+      </v-btn> -->
+      <v-spacer />
+      <v-switch
+        @change="flipColumnsTable"
+        v-model="flipColumns"
+        :loading="flipColumnsLoading"
+      >
+      </v-switch>
+      <v-spacer />
       <v-btn @click="missingRulesDialog = true">
         Extra Rules
-      </v-btn></v-toolbar
-    >
+      </v-btn>
+    </v-toolbar>
 
     <v-dialog :value="missingRulesDialog" width="500" fullscreen>
       <v-card>
@@ -80,6 +95,9 @@
       tooltipShowDelay="0"
       :defaultColDef="defaultColDef"
       tooltipMouseTrack="true"
+      :overlayLoadingTemplate="overlayLoadingTemplate"
+      :rowMultiSelectWithClick="true"
+      rowSelection="multiple"
     >
     </ag-grid-vue>
   </div>
@@ -92,8 +110,14 @@ import { AgGridVue } from "ag-grid-vue";
 import data_rules from "../assets/data.json";
 import data_headers from "../assets/data_headers.json";
 import version from "../assets/VERSION.json";
+import data_rule_set from "../assets/data_rule_set.json";
 import customTooltip from "./customTooltip";
 import ruleSetFilter from "./ruleSetFilter";
+import cfinput from "../helper/genCloudformation";
+
+const toolTipValueGetter = function(params) {
+  return params.value || "X";
+};
 
 export default {
   name: "App",
@@ -103,14 +127,22 @@ export default {
     data: [],
     gridApi: null,
     defaultColDef: {
-      tooltipComponent: "customTooltip",
+      // tooltipComponent: "customTooltip",
       resizeable: true,
+      tooltipValueGetter: toolTipValueGetter,
+      tooltipComponentFramework: "customTooltip",
     },
     missingRules: ["Empty"],
     missingRulesDialog: false,
     version: version,
+    flipColumns: true,
+    flipColumnsLoading: false,
+    overlayLoadingTemplate: null,
+    rowSelection: null,
   }),
   created() {
+    this.overlayLoadingTemplate =
+      '<span class="ag-overlay-loading-center">Please wait while your rows are loading</span>';
     this.initialize();
   },
 
@@ -118,14 +150,26 @@ export default {
     initialize() {
       this.parsePacks();
     },
-    parsePacks(packs) {
-      this.log("Parsing Config Packs", packs);
-      this.data = [...data_rules];
-      this.parseHeaders();
+    toolTipValueGetter(params) {
+      console.log(params);
+      return { value: params.value };
     },
-    parseHeaders() {
+    rule_set() {
+      this.log("Parsing Config Packs with Row RuleSet");
+      // this.gridApi.showLoadingOverlay();
+      this.data = [...data_rule_set];
+      console.log(this.data_rule_set);
+      this.parseHeaders(this.data);
+    },
+    parsePacks() {
+      this.log("Parsing Config Packs");
+      // this.gridApi.showLoadingOverlay();
+      this.data = [...data_rules];
+      this.parseHeaders(this.data);
+    },
+    parseHeaders(data) {
       let headers = {};
-      let all_headers = this.data.flatMap((x) => Object.keys(x));
+      let all_headers = data.flatMap((x) => Object.keys(x));
       headers = [...new Set(all_headers)];
       this.missingRules = data_headers.filter((x) => !headers.includes(x));
       this.genHeaders(headers);
@@ -143,13 +187,19 @@ export default {
           field: headers[item],
           sortable: false,
           filter: true,
-          tooltipField: headers[item],
+
+          resizable: true,
+          tooltipValueGetter: toolTipValueGetter,
+          tooltipComponentFramework: "customTooltip",
         });
       }
       const isName = (element) => element.field == "NAME";
-      const isToalCount = (element) => element.field == "TOTAL_RULES";
+      const isTotalCount = (element) => element.field == "TOTAL_RULES";
+      const isURL = (element) => element.field == "URL";
+
       columns.splice(columns.findIndex(isName), 1);
-      columns.splice(columns.findIndex(isToalCount), 1);
+      columns.splice(columns.findIndex(isTotalCount), 1);
+      columns.splice(columns.findIndex(isURL), 1);
 
       columns.push({
         field: "NAME",
@@ -157,15 +207,29 @@ export default {
         rowDrag: true,
         lockPinned: false,
         filterFramework: "ruleSetFilter",
+        filterParams: {
+          flipColumns: this.flipColumns,
+        },
         width: 300,
+        sortable: true,
+        tooltipValueGetter: toolTipValueGetter,
       });
+      if (this.flipColumns == true) {
+        columns.push({
+          field: "TOTAL_RULES",
+          pinned: "left",
+          rowDrag: false,
+          lockPinned: false,
+          width: 130,
+          sortable: true,
+        });
+      }
       columns.push({
-        field: "TOTAL_RULES",
+        field: "URL",
         pinned: "left",
         rowDrag: false,
         lockPinned: false,
-        width: 130,
-        sortable: true,
+        hide: true,
       });
       this.headers = columns;
     },
@@ -178,6 +242,40 @@ export default {
     downloadCSV() {
       this.gridApi.exportDataAsCsv();
     },
+    toCF() {
+      this.log("Cloudformation");
+      cfinput(this.gridApi.getSelectedNodes(), this.flipColumns);
+    },
+    flipColumnsTable() {
+      console.log(this.gridApi);
+      // console.log(this.gridColumnApi);
+      const filterinstance = this.gridApi.getFilterInstance("NAME");
+      const vueFilterInstance = filterinstance.getFrameworkComponentInstance();
+
+      this.data = "";
+      console.log("flipcolumnsloading is", this.flipColumnsLoading);
+      if (this.flipColumns) {
+        this.flipColumnsLoading = true;
+        console.log("default");
+        this.parsePacks();
+        // this.flipColumnsLoading = false;
+      } else if (this.flipColumns == false) {
+        this.flipColumnsLoading = true;
+        console.log("flip columns");
+        this.rule_set();
+        // this.flipColumnsLoading = false;
+        console.log(this.flipColumnsLoading);
+      }
+      console.log("start");
+      console.log("flipcolumnsloading is", this.flipColumnsLoading);
+
+      this.gridApi.showLoadingOverlay();
+      setTimeout(() => {
+        vueFilterInstance.initData();
+        console.log("end");
+        this.flipColumnsLoading = false;
+      }, 1000);
+    },
   },
   components: {
     "ag-grid-vue": AgGridVue,
@@ -189,6 +287,7 @@ export default {
   },
 };
 </script>
+
 <style>
 .tooltip {
   position: absolute;

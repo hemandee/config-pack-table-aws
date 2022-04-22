@@ -8,8 +8,11 @@ export default {
   name: "customTooltip",
   data: () => ({ data: null }),
   beforeMount() {
-    this.data = this.params.column.getColId() || "Empty";
-    console.log(this.data);
+    if (this.params.value == "X") {
+      this.data = this.params.column.getColId() || "Empty";
+    } else {
+      this.data = this.params.value;
+    }
   },
 };
 </script>
